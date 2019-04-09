@@ -8,10 +8,13 @@ interface inlineFormat {
   wrapper:HTMLElement[]
 }
 //function declarations
-const makeEl = (element:string,tag:string):HTMLElement => {
+const makeEl = (element:string | null,tag:string,...children:HTMLElement[]):HTMLElement => {
   const el:HTMLElement = document.createElement(tag);
-  const txt:Text = document.createTextNode(element);
+  const txt:Text = document.createTextNode(element || "");
   el.appendChild(txt);
+  if (children) {
+    children.map(x => el.innerHTML += x);
+  }
   return el;
 }
 
@@ -33,13 +36,51 @@ const parseMd = (string:string) => {
   const el = string;
   const lines:string[] = [];
   const formattedFull:HTMLElement[] = [];
+  let isList = false;
+  let listIndex:number = 0;
   // extract explicit line breaks
   el.split('\n').map(x=>lines.push(x));
   // check for headers
-  lines.map(x => {
+  lines.map((x,i) => {
     switch (x.slice(0,(x.indexOf(' ') + 1))) {
-      case "#\ ": formattedFull.push(makeEl(x.replace('#\ ', ""),'h1'));
+      case ">\ ":
+      case "-\ ":
+        if (isList) {
+          const listItem = "<li>"+x.slice(2,x.length)+"</li>";
+          formattedFull[listIndex].append(listItem);
+        }
+        else {
+          isList = true;
+          listIndex = i;
+          const listItem = "<li>"+x.slice(2,x.length)+"</li>";
+          const newList = makeEl(listItem,'ul');
+          formattedFull.push(newList);
+        }
         break;
+      case "0. ":
+      case "1. ":
+      case "2. ":
+      case "3. ":
+      case "4. ":
+      case "5. ":
+      case "6. ":
+      case "7. ":
+      case "8. ":
+      case "9. ":
+        if (isList) {
+          const listItem = "<li>"+x.slice(2,x.length)+"</li>";
+          formattedFull[listIndex -1].append(listItem);
+        }
+        else {
+          isList = true;
+          listIndex = i;
+          const listItem = "<li>"+x.slice(2,x.length)+"</li>";
+          const newList = makeEl(listItem,'ol');
+          formattedFull.push(newList);
+        }
+        break;
+      case "#\ ": formattedFull.push(makeEl(x.replace('#\ ', ""),'h1'));
+      break;
       case "##\ ": formattedFull.push(makeEl(x.replace('##\ ', ""),'h2'));
         break;
       case "###\ ": formattedFull.push(makeEl(x.replace('###\ ', ""),'h3'));
@@ -50,7 +91,7 @@ const parseMd = (string:string) => {
         break;
       case "######\ ": formattedFull.push(makeEl(x.replace('######\ ', ""),'h6'));
         break;
-      default: formattedFull.push(makeEl(x,'p'))
+      default: isList = false;formattedFull.push(makeEl(x,'p'))
         break;
     }
   });
@@ -100,6 +141,14 @@ diskutil **eraseDisk** JHFS+ Emptied /**dev**/disk6s2
 sudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m
 ###### Erase a ~~disk~~ from console
 diskutil eraseDisk ~~JHFS+~~ Emptied /dev/disk6s2
+> test list
+> list 2
+. third test
+- fourth test
+not a list anymore
+1. new ordered list element
+1. fuck
+2. yeah
 `;
 
 const parsedText = parseMd(testTexty);
