@@ -5,6 +5,11 @@ var makeEl = function (element, tag) {
     for (var _i = 2; _i < arguments.length; _i++) {
         children[_i - 2] = arguments[_i];
     }
+    if (tag === "hr") {
+        var el_1 = document.createElement(tag);
+        el_1.style.cssText = "width:100%";
+        return el_1;
+    }
     var el = document.createElement(tag);
     var txt = document.createTextNode(element || "");
     el.appendChild(txt);
@@ -73,6 +78,7 @@ var parseMd = function (string) {
                     formattedFull.push(newList);
                 }
                 break;
+            case "___\ ": formattedFull.push(makeEl(x.replace('___\ ', ""), 'hr'));
             case "#\ ":
                 formattedFull.push(makeEl(x.replace('#\ ', ""), 'h1'));
                 break;
@@ -129,6 +135,6 @@ var parseMd = function (string) {
     });
     return formattedFull;
 };
-var testTexty = "\n# Linux ~~commands~~\n\n## __Os bootable ~~install~~ usb__\n**__sudo__ dd** if=manjaro-openbox-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m\n## Erase a __disk__ from console\ndiskutil **eraseDisk** JHFS+ Emptied /**dev**/disk6s2\n##### Os bootable install usb\nsudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m\n###### Erase a ~~disk~~ from console\ndiskutil eraseDisk ~~JHFS+~~ Emptied /dev/disk6s2\n> test list\n> list 2\n. third test\n- fourth test\nnot a list anymore\n1. new ordered list element\n1. fuck\n2. yeah\n";
+var testTexty = "\n# Linux ~~commands~~\n\n## __Os bootable ~~install~~ usb__\n**__sudo__ dd** if=manjaro-openbox-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m\n## Erase a __disk__ from console\ndiskutil **eraseDisk** JHFS+ Emptied /**dev**/disk6s2\n##### Os bootable install usb\nsudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m\nsudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m\n**sudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m**\n___ \n~~sudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m~~\n###### Erase a ~~disk~~ from console\ndiskutil eraseDisk ~~JHFS+~~ Emptied /dev/disk6s2\n> test list\n> list 2\n. third test\n- fourth test\nnot a list anymore\n1. new ordered list element\n1. fuck\n2. yeah\n";
 var parsedText = parseMd(testTexty);
 parsedText.map(function (x) { return document.body.append(x); });

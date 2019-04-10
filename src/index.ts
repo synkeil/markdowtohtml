@@ -9,6 +9,11 @@ interface inlineFormat {
 }
 //function declarations
 const makeEl = (element:string | null,tag:string,...children:HTMLElement[]):HTMLElement => {
+  if (tag === "hr") {
+    const el:HTMLElement = document.createElement(tag);
+    el.style.cssText = "width:100%";
+    return el;
+  }
   const el:HTMLElement = document.createElement(tag);
   const txt:Text = document.createTextNode(element || "");
   el.appendChild(txt);
@@ -79,6 +84,7 @@ const parseMd = (string:string) => {
           formattedFull.push(newList);
         }
         break;
+      case "___\ ": formattedFull.push(makeEl(x.replace('___\ ', ""),'hr'));
       case "#\ ": formattedFull.push(makeEl(x.replace('#\ ', ""),'h1'));
       break;
       case "##\ ": formattedFull.push(makeEl(x.replace('##\ ', ""),'h2'));
@@ -139,6 +145,10 @@ const testTexty = `
 diskutil **eraseDisk** JHFS+ Emptied /**dev**/disk6s2
 ##### Os bootable install usb
 sudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m
+sudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m
+**sudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m**
+___ 
+~~sudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m~~
 ###### Erase a ~~disk~~ from console
 diskutil eraseDisk ~~JHFS+~~ Emptied /dev/disk6s2
 > test list
