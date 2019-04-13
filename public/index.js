@@ -35,27 +35,31 @@ var parseMd = function (string) {
     var el = string;
     var lines = [];
     var formattedFull = [];
-    var isList = false;
-    var listIndex = 0;
+    var isoList = false;
+    var isuList = false;
+    var olistIndex = 0;
+    var ulistIndex = 0;
     // extract explicit line breaks
     el.split('\n').map(function (x) { return lines.push(x); });
     // check for headers
-    lines.map(function (x, i) {
+    lines.map(function (x) {
         switch (x.slice(0, (x.indexOf(' ') + 1))) {
+            // unordered list
             case ">\ ":
             case "-\ ":
-                if (isList) {
+                if (isuList) {
                     var listItem = "<li>" + x.slice(2, x.length) + "</li>";
-                    formattedFull[listIndex].append(listItem);
+                    formattedFull[ulistIndex].append(listItem);
                 }
                 else {
-                    isList = true;
-                    listIndex = i;
+                    isuList = true;
                     var listItem = "<li>" + x.slice(2, x.length) + "</li>";
                     var newList = makeEl(listItem, 'ul');
                     formattedFull.push(newList);
+                    ulistIndex = formattedFull.length - 1;
                 }
                 break;
+            // oredered list
             case "0. ":
             case "1. ":
             case "2. ":
@@ -66,16 +70,16 @@ var parseMd = function (string) {
             case "7. ":
             case "8. ":
             case "9. ":
-                if (isList) {
+                if (isoList) {
                     var listItem = "<li>" + x.slice(2, x.length) + "</li>";
-                    formattedFull[listIndex - 1].append(listItem);
+                    formattedFull[olistIndex].append(listItem);
                 }
                 else {
-                    isList = true;
-                    listIndex = i;
+                    isoList = true;
                     var listItem = "<li>" + x.slice(2, x.length) + "</li>";
                     var newList = makeEl(listItem, 'ol');
                     formattedFull.push(newList);
+                    olistIndex = formattedFull.length - 1;
                 }
                 break;
             case "___\ ": formattedFull.push(makeEl(x.replace('___\ ', ""), 'hr'));
@@ -97,8 +101,11 @@ var parseMd = function (string) {
             case "######\ ":
                 formattedFull.push(makeEl(x.replace('######\ ', ""), 'h6'));
                 break;
+            // case "\n\n ": formattedFull.push(makeEl(x.replace('\n\n ', ""),'p'));
+            // break;
             default:
-                isList = false;
+                isuList = false;
+                isoList = false;
                 formattedFull.push(makeEl(x, 'p'));
                 break;
         }
@@ -135,6 +142,25 @@ var parseMd = function (string) {
     });
     return formattedFull;
 };
-var testTexty = "\n# Linux ~~commands~~\n\n## __Os bootable ~~install~~ usb__\n**__sudo__ dd** if=manjaro-openbox-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m\n## Erase a __disk__ from console\ndiskutil **eraseDisk** JHFS+ Emptied /**dev**/disk6s2\n##### Os bootable install usb\nsudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m\nsudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m\n**sudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m**\n___ \n~~sudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m~~\n###### Erase a ~~disk~~ from console\ndiskutil eraseDisk ~~JHFS+~~ Emptied /dev/disk6s2\n> test list\n> list 2\n. third test\n- fourth test\nnot a list anymore\n1. new ordered list element\n1. fuck\n2. yeah\n";
-var parsedText = parseMd(testTexty);
-parsedText.map(function (x) { return document.body.append(x); });
+var testTexty = "\n# Linux ~~commands~~\n\n## __Os bootable ~~install~~ usb__\n\n\n**__sudo__ dd** if=manjaro-openbox-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m\n## Erase a __disk__ from console\n\n\ndiskutil **eraseDisk** JHFS+ Emptied /**dev**/disk6s2\n##### Os bootable install usb\n\n\nsudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m\nsudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m\n**sudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m**\n___ \n\n\n~~sudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m~~\n###### Erase a ~~disk~~ from console\n\n\ndiskutil eraseDisk ~~JHFS+~~ Emptied /dev/disk6s2\n> test list\n> list 2\n> third test\n- fourth test\n\n\nnot a list anymore\n1. new ordered list element\n1. fuck\n2. yeah\n";
+var printParsed = function (input, output) {
+    // Ref input and output elements
+    var elIn = input;
+    var elOut = output;
+    ; // Listen for inputs
+    if (elIn !== null && elIn.nodeName === "TEXTAREA") {
+        elIn.addEventListener("keyup", function () {
+            // Resetting output
+            elOut.innerHTML = "";
+            // Format input to md
+            var parsedText = parseMd(elIn.value || '');
+            // Print formatted text to output
+            parsedText.map(function (x) {
+                elOut.append(x || "");
+            });
+        });
+    }
+};
+var elementIn = document.getElementById('input');
+var elementOut = document.getElementById("output") || document.body;
+printParsed(elementIn, elementOut);

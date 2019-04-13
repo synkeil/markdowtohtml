@@ -41,27 +41,31 @@ const parseMd = (string:string) => {
   const el = string;
   const lines:string[] = [];
   const formattedFull:HTMLElement[] = [];
-  let isList = false;
-  let listIndex:number = 0;
+  let isoList = false;
+  let isuList = false;
+  let olistIndex = 0;
+  let ulistIndex = 0;
   // extract explicit line breaks
   el.split('\n').map(x=>lines.push(x));
   // check for headers
-  lines.map((x,i) => {
+  lines.map(x => {
     switch (x.slice(0,(x.indexOf(' ') + 1))) {
+      // unordered list
       case ">\ ":
       case "-\ ":
-        if (isList) {
+        if (isuList) {
           const listItem = "<li>"+x.slice(2,x.length)+"</li>";
-          formattedFull[listIndex].append(listItem);
+          formattedFull[ulistIndex].append(listItem);
         }
         else {
-          isList = true;
-          listIndex = i;
+          isuList = true;
           const listItem = "<li>"+x.slice(2,x.length)+"</li>";
           const newList = makeEl(listItem,'ul');
           formattedFull.push(newList);
+          ulistIndex = formattedFull.length - 1;
         }
         break;
+      // oredered list
       case "0. ":
       case "1. ":
       case "2. ":
@@ -72,16 +76,16 @@ const parseMd = (string:string) => {
       case "7. ":
       case "8. ":
       case "9. ":
-        if (isList) {
+        if (isoList) {
           const listItem = "<li>"+x.slice(2,x.length)+"</li>";
-          formattedFull[listIndex -1].append(listItem);
+          formattedFull[olistIndex].append(listItem);
         }
         else {
-          isList = true;
-          listIndex = i;
+          isoList = true;
           const listItem = "<li>"+x.slice(2,x.length)+"</li>";
           const newList = makeEl(listItem,'ol');
           formattedFull.push(newList);
+          olistIndex = formattedFull.length - 1;
         }
         break;
       case "___\ ": formattedFull.push(makeEl(x.replace('___\ ', ""),'hr'));
@@ -97,7 +101,12 @@ const parseMd = (string:string) => {
         break;
       case "######\ ": formattedFull.push(makeEl(x.replace('######\ ', ""),'h6'));
         break;
-      default: isList = false;formattedFull.push(makeEl(x,'p'))
+      // case "\n\n ": formattedFull.push(makeEl(x.replace('\n\n ', ""),'p'));
+        // break;
+      default: 
+        isuList = false;
+        isoList = false;
+        formattedFull.push(makeEl(x,'p'))
         break;
     }
   });
@@ -140,27 +149,60 @@ const testTexty = `
 # Linux ~~commands~~
 
 ## __Os bootable ~~install~~ usb__
+
+
 **__sudo__ dd** if=manjaro-openbox-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m
 ## Erase a __disk__ from console
+
+
 diskutil **eraseDisk** JHFS+ Emptied /**dev**/disk6s2
 ##### Os bootable install usb
+
+
 sudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m
 sudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m
 **sudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m**
 ___ 
+
+
 ~~sudo dd if=__manjaro-openbox__-18.0.2-2018520-stable-x86_64.iso of=/dev/rdisk3 bs=1m~~
 ###### Erase a ~~disk~~ from console
+
+
 diskutil eraseDisk ~~JHFS+~~ Emptied /dev/disk6s2
 > test list
 > list 2
-. third test
+> third test
 - fourth test
+
+
 not a list anymore
 1. new ordered list element
 1. fuck
 2. yeah
 `;
 
-const parsedText = parseMd(testTexty);
 
-parsedText.map(x => document.body.append(x))
+const printParsed = (input:HTMLTextAreaElement | null,output:HTMLElement)=>{
+  // Ref input and output elements
+  const elIn = input;
+  const elOut =  output;
+;  // Listen for inputs
+  if (elIn !== null && elIn.nodeName === "TEXTAREA") {
+    elIn.addEventListener("keyup",()=>{
+      // Resetting output
+      elOut.innerHTML = "";
+      // Format input to md
+      const parsedText = parseMd(elIn.value || '');
+      // Print formatted text to output
+      parsedText.map(x => {
+        elOut.append(x || "");
+      })
+    });
+  }
+}
+
+const elementIn:any = document.getElementById('input');
+const elementOut = document.getElementById("output") || document.body;
+
+printParsed(elementIn,elementOut)
