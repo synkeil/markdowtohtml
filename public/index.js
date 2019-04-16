@@ -82,7 +82,7 @@ var parseMd = function (string) {
                     olistIndex = formattedFull.length - 1;
                 }
                 break;
-            case "___\ ": formattedFull.push(makeEl(x.replace('___\ ', ""), 'hr'));
+            case "---\ ": formattedFull.push(makeEl(x.replace('---\ ', ""), 'hr'));
             case "#\ ":
                 formattedFull.push(makeEl(x.replace('#\ ', ""), 'h1'));
                 break;
